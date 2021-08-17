@@ -1,0 +1,437 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!--end style-->
+    <!-- font style -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,900|Oswald:300,400,700" rel="stylesheet">
+    <!--end-->
+
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
+
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script> <!--for BarChart-->
+   
+    <script src="../JavaScript/volunteerReportsJs.js"></script>
+    <script>
+        var messages = [];
+
+        $(document).ready(function () {
+            if (localStorage.getItem("LogedUser") !== null) {
+                LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+
+                $("#navbarDropdowUserName").text(LogedUser.FirstName);
+            }
+
+            ajaxCall("GET", "../api/Reports/" + LogedUser.Iduser, "", getSuccessMonth, getError);
+
+
+        });
+
+
+        function getSuccessMonth(data) {
+            console.log(data);
+            let str = "<div class='backgroundForCampian col-12'><h1 id = 'titleHomePage' class='titleStyle'>Best record of your reports in a month:</h1></div>";
+            document.getElementById("rowTitle").innerHTML = str;
+            document.getElementById("titleHomePage").innerHTML += data;
+
+            let api = "../api/Tweets/GetTweets/" + LogedUser.Iduser;
+            $(".waitGet").css("display", "flex");
+            ajaxCall("GET", api, "", getSuccessDTHome, error);
+        }
+
+        function getSuccessDTHome(data) {
+            data = data.slice(0, 2);
+            for (var i = 0; i < data.length; i++) {
+                data[i].TweetText = data[i].TweetText.substring(0, 80) + "...";
+            }
+            PageName = "Home";
+            document.getElementById("homeDTRow").classList.add("titleStyle");
+            getSuccessRenderDataTable(data);
+
+            $(".loadingPage").css("display", "none");
+            ajaxCall("GET", "../api/BarAntiReportsAnnual", "", getSuccessYear, getError);
+        }
+
+        function getSuccessYear(data) {
+            let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            let str = "<h3 class='h3Chart'>Annual reported<br/>antisemitic tweets</h3><div><canvas class='bckCharts' id='barChart2'></canvas></div>";
+            document.getElementById("barReportedYear").innerHTML = str;
+            console.log(data);
+            labelMonth = [];
+            countReported = [];
+            for (var i = 0; i < data.length; i++) {
+
+                labelMonth.push(months[data[i].MonthReport - 1]);
+                countReported.push(data[i].CountReports);
+            }
+
+            var ctx = document.getElementById("barChart2").getContext('2d');
+            var barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labelMonth,
+                    datasets: [{
+                        label: 'Count Reports',
+                        data: countReported,
+                        backgroundColor: "#cfdfec"
+                    }]
+                },
+                options: {
+                    legend: {
+                        labels: {
+                            fontColor: "white",
+                            fontSize: 15
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                fontColor: "white",
+                                beginAtZero: true
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontColor: "white",
+                                fontSize: 14,
+                                stepSize: 1,
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+
+            ajaxCall("GET", "../api/BarReportsForUser/" + LogedUser.Iduser, "", getSuccess, getError);
+        }
+        function reanderBarReports(data) {
+            labelDates = [];
+            countReported = [];
+            for (var i = 0; i < data.length; i++) {
+                var labelString = data[i].DateReported.slice(0, 10);
+                labelDates.push(labelString);
+                countReported.push(data[i].CountReported);
+            }
+        }
+
+
+        function getSuccess(data) {
+            console.log(data);
+            reanderBarReports(data);
+            if (countReported.length > 0) {
+                let str = "<h3 class='h3Chart'>Your reports<br/>from last week:</h3><div><canvas id='barChartReportedWeek1' class='bckCharts'></canvas></div>";
+                document.getElementById("barReportedWeek").innerHTML = str;
+                var ctx = document.getElementById("barChartReportedWeek1").getContext('2d');
+
+                var barChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labelDates,
+                        datasets: [{
+                            label: 'Count Reports',
+                            data: countReported,
+                            backgroundColor: "#cfdfec"
+
+                        }]
+                    },
+                    options: {
+                        legend: {
+                            labels: {
+                                fontColor: "white",
+                                fontSize: 15
+                            }
+                        },
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    fontColor: "white",
+                                    beginAtZero: true
+                                }
+                            }],
+                            xAxes: [{
+                                ticks: {
+                                    fontColor: "white",
+                                    fontSize: 14,
+                                    stepSize: 1,
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+                ajaxCall("GET", "../api/PieSearches", "", getPopularSearch, getError);
+            }
+            else {
+                ajaxCall("GET", "../api/BarReportsForUser/BarOfAllUsers/" + LogedUser.Iduser, "", getSuccessBarReportsOfAllUsers, getError);
+            }
+
+        }
+        function getSuccessBarReportsOfAllUsers(data) {
+            console.log(data);
+            reanderBarReports(data);
+            let str = "<h3 class='h3Chart'>Users reports<br/>from last week:</h3><div><canvas id='barChartReportedWeek2' class='bckCharts'></canvas></div>";
+            document.getElementById("barReportedWeek").innerHTML = str;
+            var ctx = document.getElementById("barChartReportedWeek2").getContext('2d');
+            var barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labelDates,
+                    datasets: [{
+                        label: 'Count Reports',
+                        data: countReported,
+                        backgroundColor: "#cfdfec"
+
+                    }]
+                },
+                options: {
+                    legend: {
+                        labels: {
+                            fontColor: "white",
+                            fontSize: 15
+                        }
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                fontColor: "white",
+                                beginAtZero: true
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontColor: "white",
+                                fontSize: 14,
+                                stepSize: 1,
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+            ajaxCall("GET", "../api/PieSearches", "", getPopularSearch, getError);
+
+
+        }
+
+        function getPopularSearch(data) {
+            str = "";
+            for (var i = 0; i < data.length; i++) {
+                //str += "<li class='star'>" + data[i].SearchKey + "</li>"
+                str += "<li><img class='starImg' src='../images/star.png' />" + data[i].SearchKey + "</li>";
+            }
+            document.getElementById("poplarSearchKey").innerHTML = str;
+
+            ajaxCall("GET", "../api/LearningSystem/GetMeassagesUser", "", getLearningSearch, getError);
+        }
+
+
+        function getLearningSearch(data) {
+            str = "";
+            for (var i = 0; i < data.length; i++) {
+                messages.push(data[i]);
+            }
+
+            let api = "../api/UsersReports/getUserDaily/" + LogedUser.Iduser;
+            ajaxCall("GET", api, "", getSuccessDailyReport, getError);
+
+        }
+
+        function getSuccessDailyReport(data) {
+
+            str = "Today you've done " + data + " reports";
+            messages.push(str);
+            var counter = 1;
+            var elem = $("#LearnSearchKey");
+            elem.html("<h5 class='switchingH5'>" + messages[0] + "</h5>");
+            setInterval(change, 4000);
+            function change() {
+
+                elem.fadeOut(function () {
+                    elem.html("<h5 class='switchingH5'>" + messages[counter] + "</h5>");
+                    counter++;
+                    if (counter >= messages.length) { counter = 0; }
+                    elem.fadeIn();
+                });
+            }
+
+
+            $(".waitGet3").css("display", "flex");
+
+        }
+
+        function getError(err) {
+            console.log(err);
+        }
+        function logOut() {
+            localStorage.removeItem("LogedUser");
+            window.location.href = "Login.html"
+        }
+
+    </script>
+    <style>
+        .containerBarchart {
+            margin: 15px auto;
+        }
+
+        h2 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!--//navbar-->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="whiteColor nav-item nav-link active" href="HomePage.html">Home </a>
+                <!--<a class="whiteColor nav-item nav-link" href="index.html">Timer </a>-->
+                <a class="whiteColor nav-item nav-link" href="VolunteerReports.html">
+                    Suspicious Tweets List
+                </a>
+                <a class="whiteColor nav-item nav-link" href="CustomizedSearch.html">
+                    Customized Search
+                </a>
+                <a class="whiteColor nav-item nav-link" href="ExploredHashtags.html">
+                    Suggested Search keys
+                </a>
+
+                    <img id="circleUser" src="../images/user-circle.png" />
+                    <a class="nav-link dropdown-toggle active" id="navbarDropdowUserName" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="UpdateDetails.html">Update details</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" id="logOut" onclick="logOut()">Log Out</a>
+                    </div>
+               
+            </div>
+        </div>
+    </nav>
+    <!--end-->
+    <div class="container">
+        <div class="row" id="rowTitle">
+        </div>
+        <div class="loadingPage row">
+            <img src="../images/loadingImg.gif" />
+        </div>
+        <div class="row waitGet" id="homeDTRow">
+
+            <!--start data table-->
+
+            <div class="col-10">
+                <div id="indication"></div>
+                <div id="titleTable" class="backgroundForCampian">
+                </div>
+                <form id="Mform">
+                    <table id="tweetsTable" class="display nowrap" style="width:100%">
+                    </table>
+                </form>
+            </div>
+            <!--pup up-->
+            <div class="modal fade" id="DescModal" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button id="closeModal" type="button" class="close" data-dismiss="modal" aria-hidden="true">X</button>
+                            <h3 class="modal-title">REPORT</h3>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row dataTable">
+                                <div class="col-md-1">
+                                    <label class="control-label">Link: </label>
+                                </div>
+                                <div class="col-md-11">
+                                    <a class="form-control" id="urlTweet"></a>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row dataTable">
+                                <div class="col-md-12">
+                                    <label class="control-label">Did you Report?</label>
+                                    <div>
+                                        <input type="checkbox" id="yesCheckbox" name="yes" value="yes" onclick="insertValToReasons(this.value)">
+                                        <label for="yes" id="yes"> Yes</label><br>
+                                        <input type="checkbox" id="noCheckbox" name="no" value="no" onclick="insertValToReasons(this.value)">
+                                        <label for="no" id="no"> No</label><br>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label id="reason" class="control-label initiallyHidden">Reason:</label>
+                                    <select id="reasonsOptions" class="initiallyHidden"> </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div>
+                                <img id="twitterReport" src="../images/twitterReport.jpg" />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <div>
+                                <button type="button" class="btn btn-default" id="submitBtn">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.modal-content -->
+                </div>
+                <!-- /.modal-dialog -->
+            </div>
+            <!-- /.modal -->
+        </div>
+
+        <div class="row waitGet">
+            <div class="col-6">
+                <main id="barReportedWeek" class="containerBarchart">
+                </main>
+            </div>
+            <div class="col-6">
+                <main id="barReportedYear" class="containerBarchart">
+                </main>
+            </div>
+
+        </div>
+        <div class="row waitGet3">
+            <div class="col-4 borderToMessage">
+                <div class="make-Style">
+                    <div class="floatTitle">
+                        <img class="imgMessage" src="../images/twitterIcon.png" />
+                        <span class="titleForMessage">Popular Search Keys</span>
+                    </div>
+                    <ul class="unicode-list" id="poplarSearchKey">
+                    </ul>
+                </div>
+            </div>
+            <!--<div class="col-2 disNone"></div>-->
+            <div class="col-8 centerDiv">
+
+                <div class="floatTitle text-transition">
+
+                    <ul class="unicode-list" id="LearnSearchKey">
+                    </ul>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

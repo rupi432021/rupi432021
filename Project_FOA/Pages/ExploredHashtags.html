@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+
+    <!--end style-->
+    <!-- font style -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,900|Oswald:300,400,700" rel="stylesheet">
+    <!--end-->
+
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>-->
+
+
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+    <script src="../JavaScript/indexJs.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            selectedHashtagsFromLocal = [];
+            LogedUser = "";
+            if (localStorage.getItem("LogedUser") !== null) {
+                LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+                $("#navbarDropdowUserName").text(LogedUser.FirstName);
+            }
+            localStorage.removeItem("selectedHashtags");
+            $("#btnAddToMyList").click(addToMyList);
+            $("#btnDelete").click(DeleteHashtag);
+            ajaxCall('GET', '../api/HashtagsToUser/' + LogedUser.Iduser, "", getSuccessExploredHashtags, ecb);
+
+        })
+
+        function getPostSuccessExploredHashtags(data) {
+            if (selectedHashtagsFromLocal.length > 0) {         
+                swal("successfully!", "Hashtag was add to your customized list successfully!", "success");
+                setTimeout(150000);
+                inputValue = true;
+                for (var i = 0; i < selectedHashtagsFromLocal.length; i++) {
+                    LogedUser.CustomizedSearchListOfUser = LogedUser.CustomizedSearchListOfUser.concat(selectedHashtagsFromLocal[i].Hashtag);
+
+                }
+                localStorage.setItem("LogedUser", JSON.stringify(LogedUser));
+            }
+            getSuccessExploredHashtags(data);
+        }
+
+
+        function getSuccessExploredHashtags(data) {
+
+            localStorage.removeItem("selectedHashtags");
+            str = "";
+            if (data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    str += "<br/><div class='divForhash'><input value='" + data[i].IdHashUser + "' type='checkbox' id='" + data[i].IdHashUser + "'/><label class='lblExplored'>" + data[i].Hashtag + "</label></div><br/>";
+                }
+                document.getElementById("exploredHashtagsList").classList.add("exploredList");
+
+
+
+            }
+            else {
+                str += "There are no explored hashtags.";
+                document.getElementById("exploredHashtagsList").classList.add("noExplored");
+                $("#btnAddToMyList").prop("disabled", true);
+                $("#btnDelete").prop("disabled", true);
+                
+            }
+
+            document.getElementById("exploredHashtagsList").innerHTML = str;
+
+            $(".loadingPage").css("display", "none");
+            $(".waitGet").css("display", "block");
+
+        }
+        function ecb(e) {
+            console.log(e);
+        }
+
+        function addToMyList() {
+
+            selectHastags()
+            if (localStorage.getItem("selectedHashtags") !== null) {
+                selectedHashtagsFromLocal = JSON.parse(localStorage.getItem("selectedHashtags"));
+            }
+
+
+
+            ajaxCall('POST', '../api/HashtagsToUser/PostFromExploredToPersonalList', JSON.stringify(selectedHashtagsFromLocal), getPostSuccessExploredHashtags, ecb);
+        }
+
+        function DeleteHashtag() {
+            selectHastags()
+            selectedHashtagsFromLocal = [];
+            if (localStorage.getItem("selectedHashtags") !== null) {
+                selectedHashtagsFromLocal = JSON.parse(localStorage.getItem("selectedHashtags"));
+            }
+            console.log(selectedHashtagsFromLocal)
+            ajaxCall('DELETE', '../api/HashtagsToUser', JSON.stringify(selectedHashtagsFromLocal), successDeleted, ecb);
+        }
+
+        function successDeleted (data) {
+            swal("successfully!", "Hashtag was thrown successfully!", "success");
+            setTimeout(150000);
+            inputValue = true;
+            getSuccessExploredHashtags(data);
+        }
+
+        function selectHastags() {
+            var selected = []
+            var checkboxes = document.querySelectorAll('input[type=checkbox]:checked')
+
+
+            for (var i = 0; i < checkboxes.length; i++) {
+                obj = {
+                    IdUser: LogedUser.Iduser,
+                    IdHashUser: checkboxes[i].value,
+                    Hashtag: $("#" + checkboxes[i].value).next("label").html(),
+                    Hashtags: null
+                }
+                selected.push(obj);
+            }
+
+
+            localStorage.setItem("selectedHashtags", JSON.stringify(selected));
+        }
+        function logOut() {
+            localStorage.removeItem("LogedUser");
+            window.location.href = "Login.html"
+        }
+
+
+    </script>
+</head>
+<body>
+    <!--//navbar-->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="whiteColor nav-item nav-link" href="HomePage.html">Home </a>
+                <!--<a class="whiteColor nav-item nav-link" href="index.html">Timer </a>-->
+                <a class="whiteColor nav-item nav-link" href="VolunteerReports.html">
+                    Suspicious Tweets List
+                </a>
+                <a class="whiteColor nav-item nav-link" href="CustomizedSearch.html">
+                    Customized Search
+                </a>
+                <a class="whiteColor nav-item nav-link active" href="ExploredHashtags.html">
+                    Suggested Search keys
+                </a>
+
+                <img id="circleUser" src="../images/user-circle.png" />
+                <a class="nav-link dropdown-toggle active" id="navbarDropdowUserName" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="UpdateDetails.html">Update details</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" id="logOut" onclick="logOut()">Log Out</a>
+                </div>
+
+
+
+            </div>
+        </div>
+    </nav>
+    <!--end-->
+    <div class="container">
+        <div class="loadingPage row">
+            <img src="../images/loadingImg.gif" />
+        </div>
+        <div class="row waitGet">
+            <h1 id="explored" class="titleStyle">
+                Explored Hashtags Details
+            </h1>
+            <h3 class="info">
+                This hashtags were found through your customized search of antisemitic tweets. <br />
+                <br /> You can choose to add them to your customized list or to throw them.
+            </h3>
+        </div>
+        <div class="row waitGet">
+            <div id="exploredHashtagsList">
+            </div>
+            <div class="btnCenter row">
+                <button id="btnAddToMyList" class="btnBlue">Add</button>
+                <button id="btnDelete" class="btnBlue">Throw</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+
+    <!--end style-->
+    <!-- font style -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,900|Oswald:300,400,700" rel="stylesheet">
+    <!--end-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">-->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+    <script src="../JavaScript/volunteerReportsJs.js"></script>
+</head>
+<body onload="initVolunteerReport('VolunteerReport')">
+    <!--//navbar-->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="whiteColor nav-item nav-link" href="HomePage.html">Home </a>
+                <!--<a class="whiteColor nav-item nav-link" href="index.html">Timer </a>-->
+                <a class="whiteColor nav-item nav-link active" href="VolunteerReports.html">
+                    Suspicious Tweets List
+                </a>
+                <a class="whiteColor nav-item nav-link" href="CustomizedSearch.html">
+                    Customized Search
+                </a>
+                <a class="whiteColor nav-item nav-link" href="ExploredHashtags.html">
+                    Suggested Search keys
+                </a>
+
+                <img id="circleUser" src="../images/user-circle.png" />
+                <a class="nav-link dropdown-toggle active" id="navbarDropdowUserName" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="UpdateDetails.html">Update details</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" id="logOut" onclick="logOut()">Log Out</a>
+                </div>
+
+
+
+            </div>
+        </div>
+    </nav>
+    <!--end-->
+    <div class="container">
+        <div class="backgroundForCampian row waitGet" id="titleTable">
+        </div>
+        <div class="loadingPage row">
+            <img src="../images/loadingImg.gif" />
+        </div>
+        <div class="row waitGet">
+            <form id="Mform" class="waitGet">
+                <table id="tweetsTable" class="display nowrap" style="width:100%">
+                </table>
+            </form>
+        </div>
+    </div>
+    <!--pup up-->
+    <div class="modal fade" id="DescModal" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button id="closeModal" type="button" class="close" data-dismiss="modal" aria-hidden="true">X</button>
+                    <h3 class="modal-title">REPORT</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="row dataTable">
+                        <div class="col-md-1">
+                            <label class="control-label">Link: </label>
+                        </div>
+                        <div class="col-md-11">
+                            <a class="form-control" id="urlTweet"></a>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row dataTable">
+                        <div class="col-md-12">
+                            <label class="control-label">Did you Report?</label>
+                            <div>
+                                <input type="checkbox" id="yesCheckbox" name="yes" value="yes" onclick="insertValToReasons(this.value)">
+                                <label for="yes" id="yes"> Yes</label><br>
+                                <input type="checkbox" id="noCheckbox" name="no" value="no" onclick="insertValToReasons(this.value)">
+                                <label for="no" id="no"> No</label><br>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label id="reason" class="control-label initiallyHidden">Reason:</label>
+                            <select id="reasonsOptions" class="initiallyHidden"> </select>
+                        </div>
+                    </div>
+                    <br>
+                    <div>
+                        <img id="twitterReport" src="../images/twitterReport.jpg" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div>
+                        <button type="button" class="btn btn-default" id="submitBtn">Submit</button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+
+</body>
+</html>

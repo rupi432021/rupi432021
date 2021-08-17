@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+
+    <!--end style-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+
+    <!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>-->
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+
+    <script>
+        $(document).ready(function () {
+            $("#pForm").submit(checkIfUserExists);
+
+        });
+
+        function checkIfUserExists() {
+
+            let email = $("#emailTB").val();
+            let password = $("#passwordTB").val();
+
+            let api = "../api/User/" + email + "/" + password;
+
+            ajaxCall("GET", api, "", getCheckIfExistsSuccess, getError);
+
+            return false;
+        }
+
+        //add customer
+        function postUser() {
+            let fname = $("#fnameTB").val();
+            let lname = $("#lnameTB").val();
+            let email = $("#emailTB").val();
+            let phone = $("#phoneTB").val();
+            let password = $("#passwordTB").val();
+
+
+            let user = {
+                UserPassword: password,
+                FirstName: fname,
+                LastName: lname,
+                Email: email,
+                Phone: phone,
+            }
+
+            ajaxCall("POST", "../api/User", JSON.stringify(user), postSuccess, postError)
+
+        }
+
+        function getCheckIfExistsSuccess(data) {
+            if (data != null) {
+                //alert("the user is already exists!")
+                swal("Oops..", "The user is already exists!", "error");
+                inputValue = true;
+            }
+            else {
+                postUser();
+            }
+        }
+
+        function getError(err) {
+            console.log(err);
+        }
+
+        //success post customer
+        function postSuccess(data) {
+            //alert("Happy to see you " + data + "! please login to start monitoring");
+            $("input:text").val("");
+            $("input:password").val("");
+            swal("Happy to see you " + data + "!", "Please login to start", "success");
+            setTimeout(window.location.href = "login.html", 250000);
+            inputValue = true;
+            //window.location.href = "Login.html";
+        }
+
+        //error post customer
+        function postError(err) {
+            console.log(err.responseJSON.Message);
+            alert("could not add the user");
+
+        }
+
+        function logOutCustomer() {
+            localStorage.removeItem("LogedUser");
+            swal("successfully!", "You loged out successfully!", "success");
+            setTimeout(window.location.href = "login.html", 250000);
+            inputValue = true;
+            $("#btnLog").html("Log in");
+        }
+
+    </script>
+</head>
+<body>
+    <div class="container">
+            <div class="app">
+                    
+
+                    <form id="pForm">
+                        <img class="imgName" src="../images/nameSystem.jpeg" />
+                        <div class="LoginArea">
+                            <h2 id="TitleLogin" class="titleLogin">
+                                Register
+                            </h2>
+                            <div class="form-group">
+                                <!--<label for="emailTB">Email</label>-->
+                                <h3 class="subTitleLogin">Email address</h3>
+                                <input type="text" class="form-control inputs" id="emailTB" placeholder="Email.." required
+                                       pattern="^[a-zA-Z0-9_\.]+@[a-zA-Z0-9]+\.[a-z]+(\.[a-z]+)?$"
+                                       oninvalid="this.setCustomValidity('Email is invalid')"
+                                       oninput="this.setCustomValidity('')" />
+                            </div>
+                            <div class="form-group">
+                                <!--<label for="passwordTB">Password</label>-->
+                                <h3 class="subTitleLogin">Password</h3>
+                                <input type="password" class="form-control inputs" id="passwordTB" placeholder="Password.." required
+                                       pattern=".{6,}"
+                                       oninvalid="this.setCustomValidity('Password is too short')"
+                                       oninput="this.setCustomValidity('')" />
+                            </div>
+                            <div class="form-group">
+                                <!--<label for="fnameTB">First name</label>-->
+                                <h3 class="subTitleLogin">First name</h3>
+                                <input type="text" class="form-control inputs" id="fnameTB" placeholder="First name.." required
+                                       pattern="^[A-Za-z]{1,25}$"
+                                       oninvalid="this.setCustomValidity('First name is invalid. It must contain only English letters')"
+                                       oninput="this.setCustomValidity('')" />
+                            </div>
+
+                            <div class="form-group">
+                                <!--<label for="lnameTB">Last name</label>-->
+                                <h3 class="subTitleLogin">Last name</h3>
+                                <input type="text" class="form-control inputs" id="lnameTB" placeholder="Last name.." required
+                                       pattern="^[A-Za-z]{1,25}$"
+                                       oninvalid="this.setCustomValidity('Last name is invalid. It must contain only English letters.')"
+                                       oninput="this.setCustomValidity('')" />
+                            </div>
+
+                            <div class="form-group">
+                                <!--<label for="phoneTB">Phone number</label>-->
+                                <h3 class="subTitleLogin">Phone numner</h3>
+                                <input type="text" class="form-control inputs" id="phoneTB" placeholder="Phone number.." required
+                                       pattern="[0][5][0-9]{1}[-]{0,1}[0-9]{3}[-]{0,1}[0-9]{4}"
+                                       oninvalid="this.setCustomValidity('Phone number is invalid. It must be an Israeli phone number with pattern like 052-222-2222')"
+                                       oninput="this.setCustomValidity('')" />
+                            </div>
+
+                            <div class="btnLogin">
+                                <input type="submit" class="loginBtn submit center" id="btnSubmit" value="Submit" />
+                            </div>
+                            <p class="linkCenter">Already a member?<a class="LinkToPage" href="Login.html">Sign in</a></p>
+
+                        </div>
+                    </form>
+            
+                <div id="ph"></div>
+            </div>
+        </div>
+
+
+</body>
+</html>

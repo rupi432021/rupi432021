@@ -1,0 +1,392 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!--end style-->
+    <!-- font style -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,900|Oswald:300,400,700" rel="stylesheet">
+    <!--end-->
+
+
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>-->
+
+
+
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+    <script src="../JavaScript/indexJs.js"></script>
+    <script src="../JavaScript/volunteerReportsJs.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            LogedUser = "";
+            PageName = "customized";
+            $("#addSearchWord").hide();
+  
+            $("#loadingTwitter").hide();
+            $("#indication").hide();
+            if (localStorage.getItem("LogedUser") !== null) {
+                LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+                $("#navbarDropdowUserName").text(LogedUser.FirstName);
+            }
+            renderSearchList();
+            str = "<button id='deleteSearchKeys' class='btnBlue' onclick='deleteSearchKeys()'>Delete</button>";
+            document.getElementById("leftSideList").innerHTML += str;
+            renderKeysToSearch();
+
+        })
+
+        function onChangeSelect() {
+            $("#chooseSearch").prop("disabled", true);
+            $("#addSearchWord").show();
+        }
+
+        //left side
+        function renderSearchList() {
+            str = "";
+            if (LogedUser.CustomizedSearchListOfUser.length > 0) {
+                str = "<h3 class='customizcedH3'>Your list</h3>";
+                for (var i = 0; i < LogedUser.CustomizedSearchListOfUser.length; i++) {
+                    str += "<br/><div><input class='leftSide' value='" + LogedUser.CustomizedSearchListOfUser[i] + "' type='checkbox'/><label>" + LogedUser.CustomizedSearchListOfUser[i] + "</label></div><br/>";
+                }
+                document.getElementById("searchList").innerHTML = str;
+
+            }
+        }
+
+        function deleteSearchKeys() {
+            var searchToDelete = []
+            var checkboxes = document.querySelectorAll('input[type=checkbox].leftSide:checked')
+
+            for (var i = 0; i < checkboxes.length; i++) {
+                searchToDelete.push(checkboxes[i].value)
+            }
+
+            LogedUser.CustomizedSearchListOfUser = searchToDelete;
+
+            ajaxCall('DELETE', '../api/User', JSON.stringify(LogedUser), deleteSuccess, errorCustomizedSearch);
+        }
+
+        function logOut() {
+            localStorage.removeItem("LogedUser");
+            window.location.href = "Login.html"
+        }
+
+        function addSearch() {
+            sel = document.getElementById("selectSearchOption");
+            let searchOption = sel.options[sel.selectedIndex].text;
+
+            let word = $("#searchWord").val();
+            word = word.trim().toLowerCase();
+
+            const regex = /["'“$%&#@!↵↵()*+,./:;<=>?^`[\]{|}~→]/g;
+            const found = word.match(regex);
+
+            if (found == null) {
+                if (searchOption != "" && searchOption != "Choose option" && word != "")
+                    ajaxCall('GET', '../api/CustomizedSearch/GetCustomizedSearch/' + word + "/" + LogedUser.Iduser + "/" + searchOption, '', successLeftSide, errorCustomizedSearch);
+                else {
+                    swal("Oops..", "You must select a search option and write the desired word/hashtag!", "error");
+                    inputValue = true;
+                }
+
+            }
+            else {
+                swal("Oops..", "Search key consists invalid characters!", "error");
+                inputValue = true;
+            }
+           
+        }
+
+        function deleteSuccess(data) {
+            swal("successfully!", "Delete was done successfully!", "success");
+            setTimeout(150000);
+            inputValue = true;
+
+            LogedUser.CustomizedSearchListOfUser = data;
+            localStorage.setItem("LogedUser", JSON.stringify(LogedUser));
+            renderSearchList();
+            renderKeysToSearch();
+        }
+
+        function successLeftSide(data) {
+            $("#searchWord").val("");
+            document.getElementById("selectSearchOption").selectedIndex = 0;
+            console.log(data);
+
+            if (data != "Search key is already exists in your list!") {
+                swal("successfully!", "Search key was added successfully!", "success");
+                setTimeout(150000);
+                inputValue = true;
+
+                $("#addSearchWord").css("display", "none");
+
+                LogedUser.CustomizedSearchListOfUser.push(data);
+                localStorage.setItem("LogedUser", JSON.stringify(LogedUser));
+                str = "<br/><div><input class='leftSide' value='" + data + "' type='checkbox'/><label>" + data + "</label></div><br/>";
+                document.getElementById("searchList").innerHTML += str;
+                renderKeysToSearch();
+            }
+            else {
+                swal(data, "", "info");
+                inputValue = true;
+            }
+        }
+
+        function errorCustomizedSearch(err) {
+            console.log(err)
+        }
+
+        //right side
+        function renderKeysToSearch() {
+
+            str = "";
+            LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+            if (LogedUser.CustomizedSearchListOfUser != null) {
+                for (var i = 0; i < LogedUser.CustomizedSearchListOfUser.length; i++) {
+                    str += "<li><input class='check' type='checkbox'  value='" + LogedUser.CustomizedSearchListOfUser[i] + "' />" + LogedUser.CustomizedSearchListOfUser[i] + "</li>";
+                }
+                document.getElementById("ulKeyWordsOptions").innerHTML = str;
+            }
+
+            //open selection - start
+            var checkList = document.getElementById('selectToSearch');
+            checkList.getElementsByClassName('anchor')[0].onclick = function (evt) {
+                if (checkList.classList.contains('visible'))
+                    checkList.classList.remove('visible');
+                else
+                    checkList.classList.add('visible');
+            }
+            // end
+
+            var checks = document.querySelectorAll(".check");
+            var max = 2;
+            for (var i = 0; i < checks.length; i++)
+                checks[i].onclick = selectiveCheck;
+            function selectiveCheck(event) {
+                var checkedChecks = document.querySelectorAll(".check:checked");
+                if (checkedChecks.length >= max + 1)
+                    return false;
+            }
+
+            $(".loadingPage").css("display", "none");
+            $(".waitGet").css("display", "flex");
+        }
+
+        function searchSelectedKeywords() {
+
+            var searchKeywords = "";
+            var checkboxes = document.querySelectorAll('input[type=checkbox].check:checked')
+            if (checkboxes.length > 0) {
+                for (var i = 0; i < checkboxes.length; i++) {
+                    if (checkboxes[i].value.slice(0, 1) == "#")
+                        searchKeywords += "Hashtag-" + checkboxes[i].value.slice(1) + ",";
+                    else
+                        searchKeywords += "Word-" + checkboxes[i].value.slice(1, -1) + ",";
+                }
+                searchKeywords = searchKeywords.slice(0, -1);
+
+                var checkList = document.getElementById('selectToSearch');
+                checkList.classList.remove('visible');
+
+                //$(".check").attr("checked", false);
+                $('.check').each(function () { $(this).prop('checked', false) });
+                ajaxCall('GET', '../api/Twitter/getTweetsByCustomizedSearch/' + searchKeywords, "", successCustomizedSearchInTwitter, errorCustomizedSearch);
+            }
+
+        }
+
+        function successCustomizedSearchInTwitter(data) {
+
+            console.log(data);
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].TweetsArray.length > 0) {
+                    checkNeedToExplore = true;
+                    data[i].TweetsArray = data[i].TweetsArray.slice(0, 1);
+                    tweetsFullInfo(data[i]);
+                }
+            }
+            fromProcess = "fromSearch";
+            $("button#btnSearchKeywords").attr("disabled", true);
+            $("#tweetsTable").html("");
+
+            let str = "<img class='customizedLoading' src='../images/customizedLoading.gif'/>"
+            $("#loadingTwitter").html(str);
+
+            indicationUser("Starting to search..");
+            $("#loadingTwitter").show();
+            $("#indication").show();
+
+            nextToExplore("customized");
+        }
+
+
+
+    </script>
+</head>
+<body>
+    <!--//navbar-->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="whiteColor nav-item nav-link" href="HomePage.html">Home </a>
+                <!--<a class="whiteColor nav-item nav-link" href="index.html">Timer </a>-->
+                <a class="whiteColor nav-item nav-link" href="VolunteerReports.html">
+                    Suspicious Tweets List
+                </a>
+                <a class="whiteColor nav-item nav-link active" href="CustomizedSearch.html">
+                    Customized Search
+                </a>
+                <a class="whiteColor nav-item nav-link" href="ExploredHashtags.html">
+                    Suggested Search keys
+                </a>
+
+                <img id="circleUser" src="../images/user-circle.png" />
+                <a class="nav-link dropdown-toggle active" id="navbarDropdowUserName" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="UpdateDetails.html">Update details</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" id="logOut" onclick="logOut()">Log Out</a>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+    <!--end-->
+    <div class="container">
+        <div class="loadingPage row">
+            <img src="../images/loadingImg.gif" />
+        </div>
+        <div class="row waitGet">
+            <div id="leftSideList" class="col-md-4 bcgBlack">
+                <h3 class="customizcedH3">Add words to search list</h3>
+                <center>
+                    <div id="addSearchList" class="row">
+                        <div id="searchEngine" class="col-12">
+                            <select id="selectSearchOption" onchange="onChangeSelect()">
+                                <option id="chooseSearch" value="-1">Choose option</option>
+                                <option value="Hashtag">Hashtag</option>
+                                <option value="Word">Word</option>
+                            </select>
+                        </div>
+                        <div id="addSearchWord" class="col-12">
+
+                            <input id="searchWord" placeholder="Add word.." />
+                            <button id="btnAddSearch" onclick="addSearch()">Add</button>
+
+                        </div>
+
+                    </div>
+                </center>
+                <div id="searchList">
+                </div>
+
+            </div>
+            <div class="col-md-1"></div>
+            <div class="col-md-7 bcgBlack">
+                <h3 class="customizcedH3">Customized search</h3>
+                <center>
+                    <div id="selectToSearch" class="dropdown-check-list" tabindex="100">
+                        <h6 class="commentSearch">*You can choose only 2 keywords</h6>
+                        <span class="anchor">Choose Keywords</span>
+                        <div id="searchKeywords">
+                            <ul id="ulKeyWordsOptions" class="items"></ul>
+                        </div>
+                        <button class="btnSearchKeys" id="btnSearchKeywords" onclick="searchSelectedKeywords()">Search</button>
+                    </div>
+                </center>
+
+                <!--start data table-->
+                <div class="container">
+                    <div id="loadingTwitter">
+                    </div>
+                    <div id="indication"></div>
+                    <div id="titleTable" class="backgroundForCampian">
+                    </div>
+                    <form id="Mform">
+                        <table id="tweetsTable" class="display nowrap" style="width:100%">
+                        </table>
+                    </form>
+                </div>
+                <!--pup up-->
+                <div class="modal fade" id="DescModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button id="closeModal" type="button" class="close" data-dismiss="modal" aria-hidden="true">X</button>
+                                <h3 class="modal-title">REPORT</h3>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row dataTable">
+                                    <div class="col-md-1">
+                                        <label class="control-label">Link: </label>
+                                    </div>
+                                    <div class="col-md-11">
+                                        <a class="form-control" id="urlTweet"></a>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="row dataTable">
+                                    <div class="col-md-12">
+                                        <label class="control-label">Did you Report?</label>
+                                        <div>
+                                            <input type="checkbox" id="yesCheckbox" name="yes" value="yes" onclick="insertValToReasons(this.value)">
+                                            <label for="yes" id="yes"> Yes</label><br>
+                                            <input type="checkbox" id="noCheckbox" name="no" value="no" onclick="insertValToReasons(this.value)">
+                                            <label for="no" id="no"> No</label><br>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label id="reason" class="control-label initiallyHidden">Reason:</label>
+                                        <select id="reasonsOptions" class="initiallyHidden"> </select>
+                                    </div>
+                                </div>
+                                <br>
+                                <div>
+                                    <img id="twitterReport" src="../images/twitterReport.jpg" />
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div>
+                                    <button type="button" class="btn btn-default" id="submitBtn">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <!-- /.modal -->
+                <div id="resultCustomized"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

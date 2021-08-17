@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+
+    <!--end style-->
+    <!-- font style -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,900|Oswald:300,400,700" rel="stylesheet">
+    <!--end-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+    <!--<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>-->
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <title>Sign in</title>
+    <script>
+
+        $(document).ready(function () {
+            $("#pForm").submit(loginCustomer);
+            $("#logOutBtn").hide();
+            //$(document).on('submit','#pform2', forgotPassword);
+            $("#pform2").submit(forgotPassword);
+          
+            //ajaxCall("GET", "../api/LearningSystem", "", getSuccessLearningSystemCustomized, getError);//change to timer page
+            //ajaxCall("GET", "../api/LearningSystem/GetLearningSystem", "", getSuccessLearningSystem, getError);//change to timer page
+        });
+       
+        function init() {
+            $("input[type=text]").val("");
+            $("input[type=password]").val("");
+            $("#email").val("");
+            $("#password").val("");
+            $("#emailForSendPass").val("");
+            LogedUser = "";
+            if (localStorage.getItem("LogedUser") !== null) {
+                //  $("#btnLog").html("Log Out");
+                LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+                $("#navbarDropdowUserName").text(LogedUser.FirstName);
+             
+            }
+           
+
+       
+        }
+
+        function loginCustomer() {
+            email = $("#email").val().toLowerCase();
+            password = $("#password").val();
+
+            let api = "../api/User/" + email + "/" + password;
+
+            ajaxCall("GET", api, "", getSuccess, getError);
+
+            return false;
+        }
+
+        function getSuccess(data) {
+            console.log(data);
+            if (data == null)
+                alert("could not log in. user does not exists.")
+            else {
+                if (localStorage.getItem("LogedUser") !== null) { //check if exists in local storage
+                    LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+                    if (LogedUser.Iduser == data.Iduser) {
+                        swal("You are already loged in!", "", "info");
+                        setTimeout(window.location.href = "HomePage.html", 250000);
+                        inputValue = true;
+                        //window.location.href = "HomePage.html";
+                    }
+                    else {
+                        swal("You need to log out in order to log in with another user!", "", "info");
+                        inputValue = true;
+                        $("#logOutBtn").show();
+                    }
+                      
+                }
+                else {
+                    if (data.Email == email && data.UserPassword == password) {
+                        localStorage.setItem("LogedUser", JSON.stringify(data));
+                        //alert("you loged in successfully!")
+                        swal("successfully!", "You loged in successfully!", "success");
+                        setTimeout(window.location.href = "HomePage.html", 250000);
+                        inputValue = true;
+
+                    }
+                    else {
+                        swal("Oops..", "Password is not correct!", "error");                      
+                        inputValue = true;                     
+                    }
+                     
+                }
+            }
+            $("input[type=text]").val("");
+            $("input[type=password]").val("");
+            
+                
+        }
+
+        function getError(err) {
+            console.log(err);
+            swal("Oops..", "Could not log in because of an error!", "error");
+            inputValue = true;    
+        }
+
+        function postSuccess(data) {
+            console.log(data);
+        }
+        function logOut() {          
+            swal("successfully!", "", "success");
+            setTimeout(window.location.href = "Login.html", 350000);
+            inputValue = true;
+            localStorage.removeItem("LogedUser");
+        }
+
+        function releaseBtn(obj) {
+            obj.setCustomValidity('');
+            if ($("#email").val() != '' && $("#password").val() != '')
+            {
+                $("#btnSubmit").attr("disabled", false);
+            }
+        }
+
+        function releaseBtnForgotPassword(obj) {
+            obj.setCustomValidity('');
+            if ($("#emailForSendPass").val() != '') {
+                $("#btnSubmitForSendPass").attr("disabled", false);
+            }
+        }
+
+        function forgotPassword() {
+             email = $("#emailForSendPass").val().toLowerCase();
+            let api = "../api/User/forgotPassword/" + email + "/";
+            ajaxCall("GET", api, "", getSuccessFP, getError);
+            return false;
+        }
+
+        function getSuccessFP(data) {
+            if (data == "The email address is not registered. \n Please try again.")
+                swal("Oops..", data, "error");
+            else
+                swal("successfully!", data, "success");
+            $("input[type=text]").val("");
+            $("input[type=password]").val("");
+        }
+        function forgotPassToShow() {
+            $("form#pform2").show();
+        }
+
+    </script>
+</head>
+<body onload="init()">
+
+    <div class="container">
+        <div class="app">
+            <form id="pForm" class="form1">
+                <img class="imgName" src="../images/nameSystem.jpeg" />
+                <div class="LoginArea">
+                    <h2 id="TitleLogin" class="titleLogin">
+                        Sign In
+                    </h2>
+                    <div class="form-group">
+                        <h3 class="subTitleLogin">Email address</h3>
+                        <input class="un center form-control inputs" id="email" type="text" placeholder="Email..." required pattern="^[a-zA-Z0-9_\.]+@[a-zA-Z0-9]+\.[a-z]+(\.[a-z]+)?$"
+                               oninvalid="this.setCustomValidity('Email is invalid')"
+                               oninput="releaseBtn(this)">
+
+                        <h3 class="subTitleLogin">Password</h3>
+                        <input class="pass center form-control inputs" id="password" type="password" placeholder="Password..." required pattern=".{6,}"
+                               oninvalid="this.setCustomValidity('password is too short')"
+                               oninput="releaseBtn(this)" />
+                    </div>
+                    <div class="btnLogin">
+                        <input type="submit" class="loginBtn submit center" id="btnSubmit" value="Login" disabled />
+                    </div>
+                    <p class="linkCenter">Not register yet?<a class="LinkToPage" href="Register.html">Sign up</a></p><br/>
+                    <p class="linkCenter"><a class="LinkToPage" onclick="forgotPassToShow()" href="#pfrom2">Forgot your password?</a></p>
+
+                    <button id="logOutBtn" class="logOutLink" onclick="logOut()">Log Out</button>
+                </div>
+            </form>
+            <form id="pform2" class="form1">
+                <div class="LoginArea">
+                    <h3 class="subTitleLogin">
+                        If you’ve forgotten your password, please enter your registered email address.<br />
+                        We’ll send you your password.
+                    </h3>
+                    <div class="form-group">
+                        <h3 class="subTitleLogin">Email address</h3>
+                        <input class="un center form-control inputs" id="emailForSendPass" type="text" placeholder="Email..." required pattern="^[a-zA-Z0-9_\.]+@[a-zA-Z0-9]+\.[a-z]+(\.[a-z]+)?$"
+                               oninvalid="this.setCustomValidity('Email is invalid')"
+                               oninput="releaseBtnForgotPassword(this)">
+                    </div>
+                    <div class="btnLogin">
+                        <input type="submit" class="loginBtn submit center" id="btnSubmitForSendPass" value="Continue" disabled />
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
+
+    </div>
+</body>
+</html>

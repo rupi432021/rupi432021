@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <!--//style for navbar-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!--end style-->
+    <!-- font style -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,900|Oswald:300,400,700" rel="stylesheet">
+    <!--end-->
+
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <script src="../Scripts/ajaxCalls.js"></script>
+    <link href="../styles/StyleSheet.css" rel="stylesheet" />
+    <script>
+
+        $(document).ready(function () {
+            $("#pForm").submit(updateUser);
+        });
+        function init() {
+            LogedUser = "";
+            if (localStorage.getItem("LogedUser") !== null) {
+                
+                LogedUser = JSON.parse(localStorage.getItem("LogedUser"));
+                $("#navbarDropdowUserName").text(LogedUser.FirstName);
+                validateField();
+                console.log(LogedUser);
+            }
+          
+        }
+        function validateField() {
+            $("#fnameTB").val(LogedUser.FirstName);
+            $("#lnameTB").val(LogedUser.LastName);
+            $("#phoneTB").val(LogedUser.Phone);
+            $("#emailTBNoChange").val(LogedUser.Email);
+            $("#passwordTB").val("");
+
+
+        }
+        //function checkPass() {
+
+        //    if (OldpasswordTB == LogedUser.UserPassword) {
+
+        //    }
+        //    else {
+        //        alert("The password is wrong")
+        //    }
+        //}
+        function updateUser() {
+            OldpasswordTB = $("#passwordTB").val();
+            if (OldpasswordTB != "" && OldpasswordTB != LogedUser.UserPassword)
+                alert("old Password is not correct.");
+            else {
+                newPasswordTB = $("#newPasswordTB").val();
+                verifyPasswordTB = $("#verifyPasswordTB").val();
+                let password;
+                if (newPasswordTB != verifyPasswordTB) {
+                    alert("Verification is not correct.")
+                }
+                else {
+
+                    if (newPasswordTB != "")
+                        password = $("#newPasswordTB").val();
+                    else
+                        password = LogedUser.UserPassword;
+                    let fname = $("#fnameTB").val();
+                    let lname = $("#lnameTB").val();
+                    let phone = $("#phoneTB").val();
+                    let email = LogedUser.Email
+                    let isActive = LogedUser.IsActive;
+                    let iduser = LogedUser.Iduser
+
+                    user = {
+                        Iduser: iduser,
+                        Email: email,
+                        UserPassword: password,
+                        FirstName: fname,
+                        LastName: lname,
+                        Phone: phone,
+                        IsActive: isActive
+                    }
+
+                    ajaxCall("PUT", "../api/User", JSON.stringify(user), postSuccess, postError)
+                    return false;
+                }
+            }
+        }
+        function postSuccess(data) {
+            console.log(data);
+            localStorage.setItem("LogedUser", JSON.stringify(user));
+            alert("Your details were updated successfully");
+            $("#navbarDropdowUserName").text(user.FirstName);
+            $("#passwordTB").val("");
+            $("#newPasswordTB").val("");
+            $("#verifyPasswordTB").val("");
+
+
+        }
+        function postError(err) {
+            console.log(err);
+        }
+        function logOut() {
+            localStorage.removeItem("LogedUser");
+            window.location.href = "Login.html"
+        }
+
+    </script>
+</head>
+<body onload="init()">
+    <!--//navbar-->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="whiteColor nav-item nav-link" href="HomePage.html">Home </a>
+                <!--<a class="whiteColor nav-item nav-link" href="index.html">Timer </a>-->
+                <a class="whiteColor nav-item nav-link" href="VolunteerReports.html">
+                    Suspicious Tweets List
+                </a>
+                <a class="whiteColor nav-item nav-link" href="CustomizedSearch.html">
+                    Customized Search
+                </a>
+                <a class="whiteColor nav-item nav-link" href="ExploredHashtags.html">
+                    Suggested Search keys
+                </a>
+
+                <img id="circleUser" src="../images/user-circle.png" />
+                <a class="nav-link dropdown-toggle active" id="navbarDropdowUserName" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="UpdateDetails.html">Update details</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" id="logOut" onclick="logOut()">Log Out</a>
+                </div>
+
+
+
+            </div>
+        </div>
+    </nav>
+    <!--end-->
+    <div class="container">
+        <div class="app">
+            <form id="pForm" class="form1">
+                <div class="LoginArea updateDetails">
+                    <h2 id="TitleUpdate" class="titleUpdate">
+                        Update details
+                    </h2>
+                    <div class="form-group">
+
+                        <h3 class="subTitleLogin">Email address</h3>
+                        <input type="text" class="form-control inputs" id="emailTBNoChange" placeholder="Email.." required
+                               disabled />
+                    </div>
+                    <div class="form-group">
+                        <h3 class="subTitleLogin">Old password</h3>
+                        <input type="password" class="form-control inputs" id="passwordTB" placeholder="Old password.."
+                               pattern=".{6,}"
+                               oninvalid="this.setCustomValidity('Password is too short')"
+                               oninput="this.setCustomValidity('')" />
+                    </div>
+                    <!--<input type="button" id="verify" onclick="checkPass()" value="verify" />-->
+                    <!--new password-->
+                    <div class="form-group" id="changePass_new">
+                        <h3 class="subTitleLogin">New Password</h3>
+                        <input type="password" class="form-control inputs" id="newPasswordTB" placeholder="New password.."
+                               pattern=".{6,}"
+                               oninvalid="this.setCustomValidity('Password is too short')"
+                               oninput="this.setCustomValidity('')" />
+                    </div>
+                    <div class="form-group" id="changePass_verify">
+                        <h3 class="subTitleLogin">Verify new password</h3>
+                        <input type="password" class="form-control inputs" id="verifyPasswordTB" placeholder="Verify password.."
+                               pattern=".{6,}"
+                               oninvalid="this.setCustomValidity('Password is too short')"
+                               oninput="this.setCustomValidity('')" />
+                    </div>
+                    <div class="form-group">
+                        <h3 class="subTitleLogin">First name</h3>
+                        <input type="text" class="form-control inputs" id="fnameTB" placeholder="Enter first name.." required
+                               pattern="^[A-Za-z]{1,25}$"
+                               oninvalid="this.setCustomValidity('First name is invalid. It must contain only English letters.')"
+                               oninput="this.setCustomValidity('')" />
+                    </div>
+                    <div class="form-group">
+
+                        <h3 class="subTitleLogin">Last name</h3>
+                        <input type="text" class="form-control inputs" id="lnameTB" placeholder="Enter last name.." required
+                               pattern="^[A-Za-z]{1,25}$"
+                               oninvalid="this.setCustomValidity('Last name is invalid. It must contain only English letters.')"
+                               oninput="this.setCustomValidity('')" />
+                    </div>
+                    <div class="form-group">
+                        <h3 class="subTitleLogin">Phone number</h3>
+                        <input type="text" class="form-control inputs" id="phoneTB" placeholder="Enter phone number.." required
+                               pattern="[0][5][0-9]{1}[-]{0,1}[0-9]{3}[-]{0,1}[0-9]{4}"
+                               oninvalid="this.setCustomValidity('Phone number is invalid. It must be an Israeli phone number with pattern like 052-222-2222.')"
+                               oninput="this.setCustomValidity('')" />
+                    </div>
+
+                    <div  class="btnLogin">
+                        <input type="submit" class="submit center loginBtn updateDetails" id="btnSubmit" value="Update" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
